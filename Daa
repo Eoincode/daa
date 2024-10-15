@@ -1,0 +1,290 @@
+#include <iostream>
+#include <vector>
+#include <climits>
+
+using namespace std;
+
+// Function to solve the Travelling Salesman Problem (TSP) using Branch and Bound
+void tspBranchAndBound(int currentCity, int currentCost, int citiesVisited, vector<vector<int>> &costMatrix, vector<bool> &visited, int &minCost, vector<int> &currentPath, vector<int> &optimalPath, int numCities) {
+    // If all cities have been visited and there's a path back to the start city
+    if (citiesVisited == numCities && costMatrix[currentCity][0] != 0) {
+        int totalCost = currentCost + costMatrix[currentCity][0]; // Add cost to return to the starting city
+        if (totalCost < minCost) {  // Update minimum cost and optimal path if found
+            minCost = totalCost;
+            optimalPath = currentPath;
+            optimalPath.push_back(0); // Add the return to the start city
+        }
+        return;
+    }
+
+    // Explore the next cities to visit
+    for (int nextCity = 0; nextCity < numCities; nextCity++) {
+        if (!visited[nextCity] && costMatrix[currentCity][nextCity] != 0) {
+            visited[nextCity] = true;  // Mark the city as visited
+            currentPath.push_back(nextCity);  // Add city to the current path
+
+            // Recur to visit the next city
+            tspBranchAndBound(nextCity, currentCost + costMatrix[currentCity][nextCity], citiesVisited + 1, costMatrix, visited, minCost, currentPath, optimalPath, numCities);
+
+            // Backtrack: unmark the city and remove it from the current path
+            visited[nextCity] = false;
+            currentPath.pop_back();
+        }
+    }
+}
+
+int main() {
+    int numCities;
+    cout << "Enter the number of cities: ";
+    cin >> numCities;
+
+    vector<vector<int>> costMatrix(numCities, vector<int>(numCities));  // Cost matrix
+    cout << "Enter the cost matrix:\n";
+    for (int i = 0; i < numCities; i++) {
+        for (int j = 0; j < numCities; j++) {
+            cin >> costMatrix[i][j];
+        }
+    }
+
+    vector<bool> visited(numCities, false);  // Track visited cities
+    visited[0] = true;  // Start from city 0
+    int minCost = INT_MAX;  // Initialize the minimum cost
+    vector<int> currentPath = {0};  // Start path from city 0
+    vector<int> optimalPath;  // To store the optimal path
+
+    // Call the TSP solver starting from city 0
+    tspBranchAndBound(0, 0, 1, costMatrix, visited, minCost, currentPath, optimalPath, numCities);
+
+    // Output the result
+    cout << "Minimum cost: " << minCost << endl;
+    cout << "Best path: ";
+    for (int city : optimalPath) {
+        cout << city << " ";
+    }
+    cout << endl;
+
+    return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+struct Item {
+   int value;
+   int weight;
+};
+
+class Solution {
+   public:
+      // Comparator function to sort items according to value/weight ratio
+      bool static comp(Item a, Item b) {
+         double r1 = (double) a.value / (double) a.weight;
+         double r2 = (double) b.value / (double) b.weight;
+         return r1 > r2;
+      }
+
+      // Function to return maximum value we can get from the knapsack
+      double fractionalKnapsack(int W, Item arr[], int n) {
+         // Sorting items by value-to-weight ratio in decreasing order
+         sort(arr, arr + n, comp);
+
+         int curWeight = 0; // Current weight in knapsack
+         double finalvalue = 0.0; // Result (value in Knapsack)
+
+         // Looping through all items
+         for (int i = 0; i < n; i++) {
+            // If adding current item doesn't exceed the capacity
+            if (curWeight + arr[i].weight <= W) {
+               curWeight += arr[i].weight;
+               finalvalue += arr[i].value;
+            } else {
+               // If we can't add the entire item, add fractional part
+               int remain = W - curWeight;
+               finalvalue += (arr[i].value / (double) arr[i].weight) * (double) remain;
+               break;
+            }
+         }
+
+         return finalvalue;
+      }
+};
+
+int main() {
+   int n, weight;
+   cout << "Enter the number of items: ";
+   cin >> n;
+
+   Item arr[n];
+   cout << "Enter the value and weight of each item:" << endl;
+   for (int i = 0; i < n; i++) {
+      cout << "Item " << i + 1 << " - Value: ";
+      cin >> arr[i].value;
+      cout << "Item " << i + 1 << " - Weight: ";
+      cin >> arr[i].weight;
+   }
+
+   cout << "Enter the maximum weight of the knapsack: ";
+   cin >> weight;
+
+   Solution obj;
+   double ans = obj.fractionalKnapsack(weight, arr, n);
+
+   cout << "The maximum value is " << setprecision(2) << fixed << ans;
+   return 0;
+}
+#include <bits/stdc++.h>
+
+using namespace std;
+
+class Solution {
+public:
+    // Function to check if it's safe to place a queen at board[row][col]
+    bool isSafe1(int row, int col, vector<string> &board, int n) {
+        int duprow = row;
+        int dupcol = col;
+
+        // Check the upper diagonal
+        while (row >= 0 && col >= 0) {
+            if (board[row][col] == 'Q')
+                return false;
+            row--;
+            col--;
+        }
+
+        // Reset row and col for the left side check
+        row = duprow;
+        col = dupcol;
+        while (col >= 0) {
+            if (board[row][col] == 'Q')
+                return false;
+            col--;
+        }
+
+        // Reset row and col for the lower diagonal check
+        row = duprow;
+        col = dupcol;
+        while (row < n && col >= 0) {
+            if (board[row][col] == 'Q')
+                return false;
+            row++;
+            col--;
+        }
+        return true;
+    }
+
+    // Function to solve N Queens problem recursively
+    void solve(int col, vector<string> &board, vector<vector<string>> &ans, int n) {
+        if (col == n) {
+            ans.push_back(board);
+            return;
+        }
+
+        for (int row = 0; row < n; row++) {
+            if (isSafe1(row, col, board, n)) {
+                board[row][col] = 'Q'; // Place the queen
+                solve(col + 1, board, ans, n); // Solve for next column
+                board[row][col] = '.'; // Backtrack and remove the queen
+            }
+        }
+    }
+
+    // Function to return all possible solutions
+    vector<vector<string>> solveNQueens(int n) {
+        vector<vector<string>> ans;
+        vector<string> board(n, string(n, '.')); // Initialize empty board
+        solve(0, board, ans, n);
+        return ans;
+    }
+};
+
+int main() {
+    int n;
+    cout << "Enter the number of queens (n): ";
+    cin >> n; // Take input from user for grid size
+
+    Solution obj;
+    vector<vector<string>> ans = obj.solveNQueens(n);
+
+    // Display all the solutions
+    for (int i = 0; i < ans.size(); i++) {
+        cout << "Arrangement " << i + 1 << "\n";
+        for (int j = 0; j < ans[i].size(); j++) {
+            cout << ans[i][j] << endl;
+        }
+        cout << endl;
+    }
+
+    return 0;
+}
+#include <bits/stdc++.h>
+using namespace std;
+
+class Solution {
+public:
+	// Function to implement Bellman-Ford algorithm
+	vector<int> bellman_ford(int V, vector<vector<int>>& edges, int S) {
+		vector<int> dist(V, 1e8); // Initialize distances to a large value
+		dist[S] = 0; // Distance to source is 0
+
+		// Relax all edges V-1 times
+		for (int i = 0; i < V - 1; i++) {
+			for (auto it : edges) {
+				int u = it[0];
+				int v = it[1];
+				int wt = it[2];
+				if (dist[u] != 1e8 && dist[u] + wt < dist[v]) {
+					dist[v] = dist[u] + wt;
+				}
+			}
+		}
+
+		// Nth relaxation to check for negative weight cycle
+		for (auto it : edges) {
+			int u = it[0];
+			int v = it[1];
+			int wt = it[2];
+			if (dist[u] != 1e8 && dist[u] + wt < dist[v]) {
+				return { -1}; // Return -1 if a negative weight cycle is detected
+			}
+		}
+
+		return dist; // Return the distance array
+	}
+};
+
+int main() {
+	int V, E;
+	cout << "Enter the number of vertices: ";
+	cin >> V;
+	cout << "Enter the number of edges: ";
+	cin >> E;
+
+	vector<vector<int>> edges(E, vector<int>(3));
+
+	// Input edges from the user
+	cout << "Enter the edges (source destination weight):" << endl;
+	for (int i = 0; i < E; i++) {
+		cin >> edges[i][0] >> edges[i][1] >> edges[i][2];
+	}
+
+	int S;
+	cout << "Enter the source vertex: ";
+	cin >> S;
+
+	Solution obj;
+	vector<int> dist = obj.bellman_ford(V, edges, S);
+
+	// Output distances from the source
+	if (dist[0] == -1) {
+		cout << "Graph contains a negative weight cycle." << endl;
+	} else {
+		cout << "Distances from source " << S << ":" << endl;
+		for (int i = 0; i < V; i++) {
+			if (dist[i] == 1e8)
+				cout << i << ": INF" << endl; // Unreachable vertices
+			else
+				cout << i << ": " << dist[i] << endl;
+		}
+	}
+
+	return 0;
+}
